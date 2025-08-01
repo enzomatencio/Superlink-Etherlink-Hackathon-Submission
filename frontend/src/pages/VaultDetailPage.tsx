@@ -241,9 +241,9 @@ export default function VaultDetailPage() {
     args: address ? [address, VAULT_ADDRESS] : undefined,
   })
 
-  // Calculate user's earned yield and APY
+  // Calculate user's earned yield and APY - vault tokens use 6 decimals, not 18!
   const userAssetValue = userShares && totalAssets && totalSupply ? 
-    (Number(formatUnits(userShares as bigint, 18)) * Number(formatUnits(totalAssets as bigint, 6))) / Number(formatUnits(totalSupply as bigint, 18)) : 0
+    (Number(formatUnits(userShares as bigint, 6)) * Number(formatUnits(totalAssets as bigint, 6))) / Number(formatUnits(totalSupply as bigint, 6)) : 0
   const userDeposited = userPrincipal ? Number(formatUnits(userPrincipal as bigint, 6)) : 0
   const userYield = userAssetValue - userDeposited
   
@@ -376,8 +376,8 @@ export default function VaultDetailPage() {
       return '0.00'
     }
     
-    const userSharesValue = Number(formatUnits(userShares as bigint, 18))
-    const totalSupplyValue = Number(formatUnits(totalSupply as bigint, 18))
+    const userSharesValue = Number(formatUnits(userShares as bigint, 6))
+    const totalSupplyValue = Number(formatUnits(totalSupply as bigint, 6))
     
     if (totalSupplyValue === 0) {
       return '0.00'
