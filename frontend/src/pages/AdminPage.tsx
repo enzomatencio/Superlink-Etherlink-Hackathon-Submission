@@ -15,6 +15,14 @@ export default function AdminPage() {
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({
     hash,
   })
+  
+  // Separate states for different actions to prevent button conflicts
+  const [actionStates, setActionStates] = useState({
+    pause: false,
+    fees: false,
+    tvl: false,
+    rebalance: false
+  })
 
   // Read vault data for admin functions
   const { data: totalAssets } = useReadContract({
@@ -47,9 +55,10 @@ export default function AdminPage() {
     functionName: 'tvlCap',
   })
 
-  // Calculate pending fees
-  const pendingFees = totalAssets && totalPrincipal ? 
-    (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6))) * 0.15 : 0
+  // Calculate pending fees - only if there's actual yield (positive difference)
+  const yieldGenerated = totalAssets && totalPrincipal ? 
+    (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6))) : 0
+  const pendingFees = yieldGenerated > 0 ? yieldGenerated * 0.15 : 0
 
   useEffect(() => {
     if (isConnected && address && ADMIN_ADDRESS) {
@@ -88,6 +97,7 @@ export default function AdminPage() {
   // Admin functions
   async function emergencyPause() {
     if (!isAdmin) return
+    setActionStates(prev => ({ ...prev, pause: true }))
     try {
       await writeContract({
         address: VAULT_ADDRESS as `0x${string}`,
@@ -99,11 +109,14 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Emergency pause failed:', error)
       alert('Emergency pause failed: ' + (error as Error).message)
+    } finally {
+      setActionStates(prev => ({ ...prev, pause: false }))
     }
   }
 
   async function unpause() {
     if (!isAdmin) return
+    setActionStates(prev => ({ ...prev, pause: true }))
     try {
       await writeContract({
         address: VAULT_ADDRESS as `0x${string}`,
@@ -115,6 +128,8 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Unpause failed:', error)
       alert('Unpause failed: ' + (error as Error).message)
+    } finally {
+      setActionStates(prev => ({ ...prev, pause: false }))
     }
   }
 
@@ -128,6 +143,7 @@ export default function AdminPage() {
       return
     }
     
+    setActionStates(prev => ({ ...prev, rebalance: true }))
     try {
       console.log('Rebalancing vault...')
       await writeContract({
@@ -140,6 +156,8 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Rebalance failed:', error)
       alert('Rebalance failed: ' + (error as Error).message)
+    } finally {
+      setActionStates(prev => ({ ...prev, rebalance: false }))
     }
   }
 
@@ -152,6 +170,7 @@ export default function AdminPage() {
       return
     }
     
+    setActionStates(prev => ({ ...prev, fees: true }))
     try {
       console.log('Claiming fees...')
       await writeContract({
@@ -164,11 +183,14 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Claim fees failed:', error)
       alert('Claim fees failed: ' + (error as Error).message)
+    } finally {
+      setActionStates(prev => ({ ...prev, fees: false }))
     }
   }
 
   async function updateTvlCapFunction() {
     if (!isAdmin || !newTvlCap) return
+    setActionStates(prev => ({ ...prev, tvl: true }))
     try {
       const capInWei = parseUnits(newTvlCap, 6) // USDC has 6 decimals
       await writeContract({
@@ -182,6 +204,8 @@ export default function AdminPage() {
     } catch (error) {
       console.error('TVL cap update failed:', error)
       alert('TVL cap update failed: ' + (error as Error).message)
+    } finally {
+      setActionStates(prev => ({ ...prev, tvl: false }))
     }
   }
 
@@ -313,14 +337,18 @@ export default function AdminPage() {
                 <p style={{ marginBottom: '16px' }}>
                   <strong>Contract Rebalance Data:</strong>
                   <br />
-                  Current APY: {canRebalanceData ? (Number(formatUnits((canRebalanceData as any)[3], 27)) * 100).toFixed(4) : '0'}% 
+                  Current APY: {canRebalanceData ? (Number((canRebalanceData as any)[3]) / 100).toFixed(4) : '0.0000'}% 
                   <br />
-                  Better APY: {canRebalanceData ? (Number(formatUnits((canRebalanceData as any)[4], 27)) * 100).toFixed(4) : '0'}%
+                  Better APY: {canRebalanceData ? (Number((canRebalanceData as any)[4]) / 100).toFixed(4) : '0.0000'}%
                   <br />
                   <span style={{ fontSize: '14px', color: '#999' }}>Real-time data from vault contracts</span>
                 </p>
-                <button onClick={rebalanceVault} className="btn btn-primary">
-                  Execute Rebalance
+                <button 
+                  onClick={rebalanceVault} 
+                  className="btn btn-primary"
+                  disabled={actionStates.rebalance}
+                >
+                  {actionStates.rebalance ? 'Executing...' : 'Execute Rebalance'}
                 </button>
               </div>
             ) : (
@@ -339,12 +367,22 @@ export default function AdminPage() {
               <div>
                 <h4 style={{ marginBottom: '12px' }}>Emergency Controls</h4>
                 {isPaused ? (
-                  <button onClick={unpause} className="btn" style={{ width: '100%' }}>
-                    Resume Vault
+                  <button 
+                    onClick={unpause} 
+                    className="btn" 
+                    style={{ width: '100%' }}
+                    disabled={actionStates.pause}
+                  >
+                    {actionStates.pause ? 'Resuming...' : 'Resume Vault'}
                   </button>
                 ) : (
-                  <button onClick={emergencyPause} className="btn" style={{ width: '100%' }}>
-                    Emergency Pause
+                  <button 
+                    onClick={emergencyPause} 
+                    className="btn" 
+                    style={{ width: '100%' }}
+                    disabled={actionStates.pause}
+                  >
+                    {actionStates.pause ? 'Pausing...' : 'Emergency Pause'}
                   </button>
                 )}
               </div>
@@ -356,9 +394,9 @@ export default function AdminPage() {
                   onClick={claimFees} 
                   className="btn" 
                   style={{ width: '100%' }}
-                  disabled={pendingFees < 0.00000001 || isPending || isConfirming}
+                  disabled={pendingFees <= 0 || actionStates.fees}
                 >
-                  {isPending ? 'Confirming...' : isConfirming ? 'Processing...' : `Claim Fees ($${pendingFees.toFixed(8)})`}
+                  {actionStates.fees ? 'Claiming...' : `Claim Fees ($${pendingFees.toFixed(6)})`}
                 </button>
               </div>
 
@@ -382,11 +420,11 @@ export default function AdminPage() {
                   />
                   <button
                     onClick={updateTvlCapFunction}
-                    disabled={!newTvlCap || isPending || isConfirming}
+                    disabled={!newTvlCap || actionStates.tvl}
                     className="btn"
                     style={{ width: '100%', marginBottom: '8px' }}
                   >
-                    {isPending ? 'Confirming...' : isConfirming ? 'Processing...' : 'Update TVL Cap'}
+                    {actionStates.tvl ? 'Updating...' : 'Update TVL Cap'}
                   </button>
                 </div>
                 <button 

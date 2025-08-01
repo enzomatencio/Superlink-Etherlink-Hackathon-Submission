@@ -122,7 +122,7 @@ superlink-etherlink-hackathon-submission/
 - **Indexing**: The Graph Protocol, GraphQL
 - **Infrastructure**: Etherlink Mainnet, Superlend Protocol
 
-## 💰 Tokenomics & Business Model
+## 💰 Business Model
 
 ### Vault Economics
 - **Performance Fee**: 15% on generated yield (not principal)
