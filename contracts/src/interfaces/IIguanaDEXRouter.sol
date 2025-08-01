@@ -32,25 +32,13 @@ interface IIguanaDEXRouter {
         uint160 sqrtPriceLimitX96;
     }
 
-    function exactInputSingle(ExactInputSingleParams calldata params)
-        external
-        payable
-        returns (uint256 amountOut);
+    function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut);
 
-    function exactInput(ExactInputParams calldata params)
-        external
-        payable
-        returns (uint256 amountOut);
+    function exactInput(ExactInputParams calldata params) external payable returns (uint256 amountOut);
 
-    function exactOutputSingle(ExactOutputSingleParams calldata params)
-        external
-        payable
-        returns (uint256 amountIn);
+    function exactOutputSingle(ExactOutputSingleParams calldata params) external payable returns (uint256 amountIn);
 
-    function multicall(bytes[] calldata data)
-        external
-        payable
-        returns (bytes[] memory results);
+    function multicall(bytes[] calldata data) external payable returns (bytes[] memory results);
 }
 
 interface IIguanaDEXQuoter {
@@ -72,21 +60,11 @@ interface IIguanaDEXQuoter {
 
     function quoteExactInputSingle(QuoteExactInputSingleParams memory params)
         external
-        returns (
-            uint256 amountOut,
-            uint160 sqrtPriceX96After,
-            uint32 initializedTicksCrossed,
-            uint256 gasEstimate
-        );
+        returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate);
 
     function quoteExactOutputSingle(QuoteExactOutputSingleParams memory params)
         external
-        returns (
-            uint256 amountIn,
-            uint160 sqrtPriceX96After,
-            uint32 initializedTicksCrossed,
-            uint256 gasEstimate
-        );
+        returns (uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate);
 
     function quoteExactInput(bytes memory path, uint256 amountIn)
         external

@@ -1,6 +1,6 @@
 import { GraphQLClient } from 'graphql-request'
 
-const GRAPH_ENDPOINT = import.meta.env.VITE_GRAPH_ENDPOINT || 'https://api.studio.thegraph.com/query/117578/superlink-usd-vault/v0.0.1'
+const GRAPH_ENDPOINT = import.meta.env.VITE_GRAPH_ENDPOINT || 'https://api.studio.thegraph.com/query/117578/superlink-usd-vault/v1.0.0'
 
 const graphQLClient = new GraphQLClient(GRAPH_ENDPOINT)
 
@@ -371,7 +371,7 @@ export class GraphQLService {
     const statsQueries = [
       // Try different vault stats queries
       `query GetVaultStats {
-        vault(id: "0x3fca75673860491acbd2ec27ba0a9b99d2031f7d") {
+        vault(id: "0x6183e7bdcba7ea6b009a52e4f01409da7107954f") {
           id
           totalValueLocked
           totalShares

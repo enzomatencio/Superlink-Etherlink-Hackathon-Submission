@@ -29,35 +29,17 @@ interface ISwapRouter02 {
         uint160 sqrtPriceLimitX96;
     }
 
-    function exactInputSingle(ExactInputSingleParams calldata params)
-        external
-        payable
-        returns (uint256 amountOut);
+    function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut);
 
-    function exactInput(ExactInputParams calldata params)
-        external
-        payable
-        returns (uint256 amountOut);
+    function exactInput(ExactInputParams calldata params) external payable returns (uint256 amountOut);
 
-    function exactOutputSingle(ExactOutputSingleParams calldata params)
-        external
-        payable
-        returns (uint256 amountIn);
+    function exactOutputSingle(ExactOutputSingleParams calldata params) external payable returns (uint256 amountIn);
 
-    function multicall(bytes[] calldata data)
-        external
-        payable
-        returns (bytes[] memory results);
+    function multicall(bytes[] calldata data) external payable returns (bytes[] memory results);
 
-    function unwrapWETH9(uint256 amountMinimum, address recipient)
-        external
-        payable;
+    function unwrapWETH9(uint256 amountMinimum, address recipient) external payable;
 
-    function sweepToken(
-        address token,
-        uint256 amountMinimum,
-        address recipient
-    ) external payable;
+    function sweepToken(address token, uint256 amountMinimum, address recipient) external payable;
 
     function refundETH() external payable;
 }
