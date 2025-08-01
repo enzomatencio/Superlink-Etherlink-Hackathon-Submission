@@ -110,7 +110,17 @@ npm run deploy
 
 ## Security Notes
 
-- Never commit actual private keys or API keys
-- Use `.env.example` files as templates
+⚠️ **CRITICAL SECURITY WARNING** ⚠️
+
+- **NEVER** commit actual private keys or API keys to git
+- The repository includes real `.env` files for the hackathon deployment - these are gitignored
+- **ALWAYS** use `.env.example` files as templates for your own deployment
 - Keep sensitive credentials in environment variables only
 - Verify all contract addresses before deployment
+- Replace all example keys/addresses with your own when deploying
+
+### Environment File Security
+- Real `.env` files are included for hackathon judges to test the deployment
+- These files contain production keys and are protected by `.gitignore`
+- For your own deployment, copy `.env.example` to `.env` and update with your credentials
+- Never share or commit real private keys or API keys

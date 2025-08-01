@@ -10,13 +10,21 @@ out/
 */build/
 */out/
 
-# Environment files
+# Environment files (CRITICAL: Never commit real .env files with secrets)
 .env
 .env.local
 .env.production
 .env.development
 */.env
 */.env.local
+
+# Specifically ignore real environment files
+contracts/.env
+frontend/.env
+subgraph/.env
+
+# Keep example files
+!**/.env.example
 
 # IDE files
 .vscode/
