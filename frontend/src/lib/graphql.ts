@@ -122,6 +122,25 @@ const ACTIVITIES_QUERIES = [
       blockTimestamp
       transactionHash
     }
+    tvlCapUpdates(first: $first, orderBy: blockTimestamp, orderDirection: desc) {
+      id
+      newCap
+      previousCap
+      updatedBy
+      blockNumber
+      blockTimestamp
+      transactionHash
+    }
+    routeSelections(first: $first, orderBy: blockTimestamp, orderDirection: desc) {
+      id
+      router
+      fee
+      amountIn
+      amountOut
+      blockNumber
+      blockTimestamp
+      transactionHash
+    }
   }`,
   
   // Try format 6: Generic events with rebalancing
@@ -142,13 +161,20 @@ const ACTIVITIES_QUERIES = [
 
 export interface VaultActivity {
   id: string
-  type: 'deposit' | 'withdrawal' | 'rebalance' | 'fees_claimed'
+  type: 'deposit' | 'withdrawal' | 'rebalance' | 'fees_claimed' | 'tvl_cap_update' | 'route_selection'
   user?: string
   assets?: string
   shares?: string
   amount?: string
   fromAsset?: string
   toAsset?: string
+  newCap?: string
+  previousCap?: string
+  updatedBy?: string
+  router?: string
+  fee?: string
+  amountIn?: string
+  amountOut?: string
   blockNumber: string
   blockTimestamp: string
   transactionHash: string
@@ -330,6 +356,37 @@ export class GraphQLService {
               })
             })
           }
+
+          if (data.tvlCapUpdates) {
+            data.tvlCapUpdates.forEach((tvlUpdate: any) => {
+              activities.push({
+                id: tvlUpdate.id,
+                type: 'tvl_cap_update',
+                newCap: tvlUpdate.newCap,
+                previousCap: tvlUpdate.previousCap,
+                updatedBy: tvlUpdate.updatedBy,
+                blockNumber: tvlUpdate.blockNumber?.toString() || '0',
+                blockTimestamp: tvlUpdate.blockTimestamp?.toString() || '0',
+                transactionHash: tvlUpdate.transactionHash || tvlUpdate.id
+              })
+            })
+          }
+
+          if (data.routeSelections) {
+            data.routeSelections.forEach((routeSelection: any) => {
+              activities.push({
+                id: routeSelection.id,
+                type: 'route_selection',
+                router: routeSelection.router,
+                fee: routeSelection.fee,
+                amountIn: routeSelection.amountIn,
+                amountOut: routeSelection.amountOut,
+                blockNumber: routeSelection.blockNumber?.toString() || '0',
+                blockTimestamp: routeSelection.blockTimestamp?.toString() || '0',
+                transactionHash: routeSelection.transactionHash || routeSelection.id
+              })
+            })
+          }
         } else if (data.vaultEvents) {
           // Format 6: Generic vault events
           data.vaultEvents.forEach((event: any) => {
@@ -371,7 +428,7 @@ export class GraphQLService {
     const statsQueries = [
       // Try different vault stats queries
       `query GetVaultStats {
-        vault(id: "0x6183e7bdcba7ea6b009a52e4f01409da7107954f") {
+        vault(id: "0xe60009dd8017cc4f300f16655e337b382a7aeae6") {
           id
           totalValueLocked
           totalShares

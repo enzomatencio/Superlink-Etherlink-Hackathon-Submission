@@ -42,7 +42,7 @@ export const config = getDefaultConfig({
 });
 
 // Contract addresses from environment - LIVE MAINNET DEPLOYMENT
-export const VAULT_ADDRESS = import.meta.env.VITE_VAULT_ADDRESS || '0x6183E7BdCBa7eA6b009A52e4f01409dA7107954F';
+export const VAULT_ADDRESS = import.meta.env.VITE_VAULT_ADDRESS || '0xe60009Dd8017CC4f300f16655E337B382A7AEAE6';
 export const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS || '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9';
 export const USDT_ADDRESS = import.meta.env.VITE_USDT_ADDRESS || '0x2C03058C8AFC06713be23e58D2febC8337dbfE6A';
 export const ADMIN_ADDRESS = import.meta.env.VITE_ADMIN_ADDRESS;

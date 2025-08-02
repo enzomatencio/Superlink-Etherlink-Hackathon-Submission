@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useAccount, useSignMessage, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useSignMessage, useReadContract, useWriteContract } from 'wagmi'
 import { formatUnits, parseUnits } from 'viem'
 import { VAULT_ADDRESS, ADMIN_ADDRESS } from '../config/web3'
 import { vaultABI } from '../config/abi'
@@ -11,10 +11,7 @@ export default function AdminPage() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [newTvlCap, setNewTvlCap] = useState('')
   const { signMessage } = useSignMessage()
-  const { writeContract, data: hash, isPending } = useWriteContract()
-  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
-    hash,
-  })
+  const { writeContract } = useWriteContract()
   
   // Separate states for different actions to prevent button conflicts
   const [actionStates, setActionStates] = useState({
@@ -176,7 +173,7 @@ export default function AdminPage() {
       await writeContract({
         address: VAULT_ADDRESS as `0x${string}`,
         abi: vaultABI,
-        functionName: 'claimFees',
+        functionName: 'claimPerformanceFees',
         args: [],
       })
       console.log('Claim fees transaction submitted')
