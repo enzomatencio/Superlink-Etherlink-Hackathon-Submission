@@ -1,0 +1,18 @@
+{
+  "name": "superlink-vault-subgraph",
+  "version": "0.1.0",
+  "description": "The Graph subgraph for Superlink Vault on Etherlink",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "auth": "graph auth --studio",
+    "deploy": "graph deploy --studio superlink-usd-vault",
+    "create-local": "graph create --node http://localhost:8020/ superlink-vault",
+    "remove-local": "graph remove --node http://localhost:8020/ superlink-vault",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 superlink-vault"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "0.69.0",
+    "@graphprotocol/graph-ts": "0.31.0"
+  }
+}

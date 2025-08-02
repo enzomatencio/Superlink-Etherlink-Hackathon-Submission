@@ -338,7 +338,7 @@ export default function AppPage() {
       const data = await response.json()
       if (data.result && data.result !== '0x') {
         const resultHex = data.result
-        const liquidityRateHex = '0x' + resultHex.slice(66, 130) // liquidityRate at offset 64
+        const liquidityRateHex = '0x' + resultHex.slice(130, 194) // liquidityRate at offset 128 (field 2)
         const liquidityRate = BigInt(liquidityRateHex)
         
         if (liquidityRate > 0) {
