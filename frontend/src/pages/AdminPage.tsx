@@ -59,7 +59,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (isConnected && address && ADMIN_ADDRESS) {
-      setIsAdmin(address.toLowerCase() === ADMIN_ADDRESS.toLowerCase())
+      setIsAdmin(address.toLowerCase() === ADMIN_ADDRESS?.toLowerCase())
     } else {
       setIsAdmin(false)
     }
@@ -77,7 +77,7 @@ export default function AdminPage() {
       })
       
       // If signature succeeds and address matches, user is verified admin
-      if (address.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
+      if (address.toLowerCase() === ADMIN_ADDRESS?.toLowerCase()) {
         setIsAdmin(true)
         alert('Admin access verified!')
       } else {

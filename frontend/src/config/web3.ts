@@ -45,7 +45,7 @@ export const config = getDefaultConfig({
 export const VAULT_ADDRESS = import.meta.env.VITE_VAULT_ADDRESS || '0xe60009Dd8017CC4f300f16655E337B382A7AEAE6';
 export const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS || '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9';
 export const USDT_ADDRESS = import.meta.env.VITE_USDT_ADDRESS || '0x2C03058C8AFC06713be23e58D2febC8337dbfE6A';
-export const ADMIN_ADDRESS = import.meta.env.VITE_ADMIN_ADDRESS;
+export const ADMIN_ADDRESS = import.meta.env.VITE_ADMIN_ADDRESS || '0x421892ff736134d95d177cd716324df1d240c295';
 
 // RPC endpoints
 export const RPC_PRIMARY = import.meta.env.VITE_RPC_PRIMARY || 'https://node.mainnet.etherlink.com';
