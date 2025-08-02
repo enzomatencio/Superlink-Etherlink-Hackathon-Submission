@@ -50,3 +50,6 @@ export const ADMIN_ADDRESS = import.meta.env.VITE_ADMIN_ADDRESS;
 // RPC endpoints
 export const RPC_PRIMARY = import.meta.env.VITE_RPC_PRIMARY || 'https://node.mainnet.etherlink.com';
 export const RPC_FALLBACK = import.meta.env.VITE_RPC_FALLBACK || 'https://relay.mainnet.etherlink.com';
+
+// The Graph endpoints
+export const GRAPH_ENDPOINT = import.meta.env.VITE_GRAPH_ENDPOINT || 'https://api.studio.thegraph.com/query/117578/superlink-usd-vault/v2.0.1-correct-vault';

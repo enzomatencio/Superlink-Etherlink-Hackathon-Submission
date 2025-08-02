@@ -54,6 +54,7 @@ export default function VaultDetailPage() {
   const [loadingActivities, setLoadingActivities] = useState(true)
   const [showDeposit, setShowDeposit] = useState(true)
   const [countdown, setCountdown] = useState(0)
+  const [currentAPY, setCurrentAPY] = useState(0)
 
   // Contract interactions
   const { writeContract, data: hash } = useWriteContract()
@@ -253,7 +254,7 @@ export default function VaultDetailPage() {
   const totalDeposited = totalPrincipal ? Number(formatUnits(totalPrincipal as bigint, 6)) : 0
   
   // Calculate real APY from underlying lending protocol using the same function as AppPage
-  function calculateRealAPY(): number {
+  async function calculateRealAPY(): Promise<number> {
     console.log('🔍 APY Debug Info (VaultDetailPage):', {
       hasReserveData: !!reserveData,
       hasUiPoolData: !!uiPoolData,
@@ -346,12 +347,69 @@ export default function VaultDetailPage() {
       }
     }
     
-    console.log('⚠️ All contract calls failed or returned invalid data (VaultDetailPage) - returning 0')
+    console.log('⚠️ All contract calls failed - trying direct RPC fallback (VaultDetailPage)...')
+    
+    // Final fallback: Get current allocation APY directly via RPC
+    try {
+      // Use current allocation if available, otherwise fallback to USDC
+      const targetAsset = currentAllocation || USDC_ADDRESS
+      const poolAddress = '0x3bD16D195786fb2F509f2E2D7F69920262EF114D'
+      
+      console.log('🔄 RPC fallback (VaultDetailPage) - using asset:', targetAsset, targetAsset === USDT_ADDRESS ? '(USDT)' : '(USDC)')
+      
+      // Make direct RPC call for target asset reserve data
+      const response = await fetch('https://node.mainnet.etherlink.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'eth_call',
+          params: [{
+            to: poolAddress,
+            data: '0x35ea6a75' + targetAsset.slice(2).padStart(64, '0') // getReserveData(targetAsset)
+          }, 'latest'],
+          id: 1
+        })
+      })
+      
+      const data = await response.json()
+      if (data.result && data.result !== '0x') {
+        const resultHex = data.result
+        const liquidityRateHex = '0x' + resultHex.slice(130, 194) // liquidityRate at offset 128 (field 2)
+        const liquidityRate = BigInt(liquidityRateHex)
+        
+        if (liquidityRate > 0) {
+          const RAY = Number(BigInt(10) ** BigInt(27))
+          const SECONDS_PER_YEAR = 365 * 24 * 60 * 60
+          
+          const aprDecimal = Number(liquidityRate) / RAY
+          const grossAPY = (Math.pow(1 + (aprDecimal / SECONDS_PER_YEAR), SECONDS_PER_YEAR) - 1) * 100
+          const netAPY = grossAPY * 0.85 // 15% performance fee
+          
+          console.log('📊 Direct RPC APY Calculation (VaultDetailPage):', {
+            asset: targetAsset === USDT_ADDRESS ? 'USDT' : 'USDC',
+            liquidityRateRaw: liquidityRate.toString(),
+            aprDecimal: aprDecimal.toFixed(10),
+            grossAPY: grossAPY.toFixed(4) + '%',
+            netAPY: netAPY.toFixed(4) + '%',
+            note: `Direct RPC fallback for ${targetAsset === USDT_ADDRESS ? 'USDT' : 'USDC'}`
+          })
+          
+          return netAPY
+        }
+      }
+    } catch (error) {
+      console.error('Direct RPC fallback failed (VaultDetailPage):', error)
+    }
+    
+    console.log('⚠️ All APY calculation methods failed (VaultDetailPage) - returning 0')
     return 0
   }
   
-  // Get real-time APY using Superlend contract data
-  const currentAPY = calculateRealAPY()
+  // Update APY when data changes
+  useEffect(() => {
+    calculateRealAPY().then(setCurrentAPY)
+  }, [reserveData, uiPoolData, currentAllocation])
   
   // Debug logging
   console.log('🔍 Debug Info:', {
@@ -667,7 +725,13 @@ export default function VaultDetailPage() {
           {/* Vault Stats */}
           <div className="stats-grid" style={{ marginBottom: '40px' }}>
             <div className="stat-item">
-              <div className="stat-value">{formatUSD(totalAssets ? Number(formatUnits(totalAssets as bigint, 6)) : 0)}</div>
+              <div 
+                className="stat-value" 
+                title={`Exact TVL: $${totalAssets ? formatUnits(totalAssets as bigint, 6) : '0.000000'}`}
+                style={{ cursor: 'help' }}
+              >
+                {formatUSD(totalAssets ? Number(formatUnits(totalAssets as bigint, 6)) : 0)}
+              </div>
               <div className="stat-label">Total Value Locked</div>
             </div>
             <div className="stat-item">
@@ -679,7 +743,16 @@ export default function VaultDetailPage() {
               <div className="stat-label">Current APY</div>
             </div>
             <div className="stat-item">
-              <div className="stat-value">{formatUSD(vaultYield)}</div>
+              <div 
+                className="stat-value" 
+                title={`Exact yield: ${vaultYield < 0 ? '-' : ''}$${Math.abs(vaultYield).toFixed(6)}`}
+                style={{ 
+                  cursor: 'help',
+                  color: vaultYield >= 0 ? '#22c55e' : '#ef4444'
+                }}
+              >
+                {vaultYield < 0 ? '-' : ''}{formatUSD(Math.abs(vaultYield))}
+              </div>
               <div className="stat-label">Total Yield Earned</div>
             </div>
           </div>
@@ -694,8 +767,15 @@ export default function VaultDetailPage() {
                   <div className="stat-label">Your Deposits</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-value" style={{ color: userYield >= 0 ? '#22c55e' : '#ef4444' }}>
-                    {formatUSD(userYield)}
+                  <div 
+                    className="stat-value" 
+                    title={`Exact yield: ${userYield < 0 ? '-' : ''}$${Math.abs(userYield).toFixed(6)}`}
+                    style={{ 
+                      color: userYield >= 0 ? '#22c55e' : '#ef4444',
+                      cursor: 'help'
+                    }}
+                  >
+                    {userYield < 0 ? '-' : ''}{formatUSD(Math.abs(userYield))}
                   </div>
                   <div className="stat-label">Your Yield Earned</div>
                 </div>

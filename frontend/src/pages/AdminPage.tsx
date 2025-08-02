@@ -161,15 +161,15 @@ export default function AdminPage() {
   async function claimFees() {
     if (!isAdmin) return
     
-    // Check if there are fees to claim
-    if (pendingFees <= 0) {
-      alert('No fees available to claim')
-      return
-    }
-    
     setActionStates(prev => ({ ...prev, fees: true }))
     try {
       console.log('Claiming fees...')
+      
+      // Show warning if no fees available but still allow transaction
+      if (pendingFees <= 0) {
+        console.log('No fees available - transaction will likely fail as expected')
+      }
+      
       await writeContract({
         address: VAULT_ADDRESS as `0x${string}`,
         abi: vaultABI,
@@ -179,7 +179,13 @@ export default function AdminPage() {
       console.log('Claim fees transaction submitted')
     } catch (error) {
       console.error('Claim fees failed:', error)
-      alert('Claim fees failed: ' + (error as Error).message)
+      
+      // More descriptive error message for zero fees case
+      if (pendingFees <= 0) {
+        alert('Transaction failed as expected - no performance fees to claim yet.')
+      } else {
+        alert('Claim fees failed: ' + (error as Error).message)
+      }
     } finally {
       setActionStates(prev => ({ ...prev, fees: false }))
     }
@@ -298,28 +304,127 @@ export default function AdminPage() {
             </p>
           </div>
 
-          {/* Vault Overview */}
-          <div className="card" style={{ marginBottom: '32px' }}>
-            <h3 className="card-title">Vault Overview</h3>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <div className="stat-value">${totalAssets ? Number(formatUnits(totalAssets as bigint, 6)).toLocaleString() : '0'}</div>
-                <div className="stat-label">Total Assets</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">${tvlCap ? Number(formatUnits(tvlCap as bigint, 6)).toLocaleString() : '0'}</div>
-                <div className="stat-label">TVL Cap</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">${pendingFees.toFixed(8)}</div>
-                <div className="stat-label">Pending Fees (15%)</div>
-              </div>
-              <div className="stat-item">
+          {/* Vault Grid Layout */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+            
+            {/* Superlink USD Vault Card */}
+            <div className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 className="card-title">Superlink USD Vault</h3>
                 <div className={isPaused ? 'status-paused' : 'status-live'}>
                   {isPaused ? '⏸ Paused' : '✅ Active'}
                 </div>
-                <div className="stat-label">Vault Status</div>
               </div>
+              
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <div 
+                    className="stat-value" 
+                    title={`Exact TVL: $${totalAssets ? formatUnits(totalAssets as bigint, 6) : '0.000000'}`}
+                    style={{ cursor: 'help' }}
+                  >
+                    ${totalAssets ? formatUnits(totalAssets as bigint, 6) : '0.000000'}
+                  </div>
+                  <div className="stat-label">USD Vault TVL (Full Precision)</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-value">${tvlCap ? Number(formatUnits(tvlCap as bigint, 6)).toLocaleString() : '0'}</div>
+                  <div className="stat-label">TVL Cap</div>
+                </div>
+                <div className="stat-item">
+                  <div 
+                    className="stat-value" 
+                    title={`Exact pending fees: $${pendingFees.toFixed(8)}`}
+                    style={{ cursor: 'help', color: pendingFees > 0 ? '#22c55e' : '#666' }}
+                  >
+                    ${pendingFees < 0 ? '-' : ''}${Math.abs(pendingFees).toFixed(8)}
+                  </div>
+                  <div className="stat-label">Pending Fees (15%)</div>
+                </div>
+                <div className="stat-item">
+                  <div 
+                    className="stat-value"
+                    title={`Total yield: ${totalAssets && totalPrincipal ? 
+                      (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6)) < 0 ? '-' : '') +
+                      '$' + Math.abs(Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6))).toFixed(6)
+                      : '$0.000000'}`}
+                    style={{ cursor: 'help', color: totalAssets && totalPrincipal && 
+                      Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6)) >= 0 ? '#22c55e' : '#ef4444' }}
+                  >
+                    {totalAssets && totalPrincipal ? 
+                      (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6)) < 0 ? '-' : '') +
+                      '$' + Math.abs(Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6))).toFixed(6)
+                      : '$0.000000'
+                    }
+                  </div>
+                  <div className="stat-label">Total Yield Earned</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Future Vaults Placeholder */}
+            <div className="card" style={{ opacity: 0.6, border: '2px dashed #ccc' }}>
+              <h3 className="card-title" style={{ color: '#999' }}>Future Vault Slot</h3>
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#999' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>+</div>
+                <p>Additional vaults will appear here as they are deployed</p>
+              </div>
+            </div>
+          </div>
+
+          {/* USD Vault Management */}
+          <div className="card" style={{ marginBottom: '32px' }}>
+            <h3 className="card-title">USD Vault Management</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+              
+              {/* Fee Management */}
+              <div>
+                <h4 style={{ marginBottom: '12px' }}>Fee Management</h4>
+                <button 
+                  onClick={claimFees} 
+                  className="btn" 
+                  style={{ width: '100%' }}
+                  disabled={actionStates.fees}
+                >
+                  {actionStates.fees ? 'Claiming...' : `Claim Fees ($${pendingFees.toFixed(6)})`}
+                </button>
+              </div>
+              
+              {/* Emergency Controls */}
+              <div>
+                <h4 style={{ marginBottom: '12px' }}>Emergency Controls</h4>
+                <button 
+                  onClick={isPaused ? unpause : emergencyPause} 
+                  className={isPaused ? 'btn' : 'btn btn-danger'}
+                  style={{ width: '100%' }}
+                  disabled={actionStates.pause}
+                >
+                  {actionStates.pause ? (isPaused ? 'Resuming...' : 'Pausing...') : (isPaused ? 'Resume Vault' : 'Emergency Pause')}
+                </button>
+              </div>
+              
+              {/* TVL Management */}
+              <div>
+                <h4 style={{ marginBottom: '12px' }}>TVL Management</h4>
+                <div style={{ marginBottom: '8px' }}>
+                  <input
+                    type="number"
+                    value={newTvlCap}
+                    onChange={(e) => setNewTvlCap(e.target.value)}
+                    placeholder="New TVL Cap"
+                    style={{ width: '100%', padding: '8px', marginBottom: '8px' }}
+                  />
+                </div>
+                <button 
+                  onClick={updateTvlCapFunction} 
+                  className="btn"
+                  style={{ width: '100%' }}
+                  disabled={!newTvlCap || actionStates.tvl}
+                >
+                  {actionStates.tvl ? 'Updating...' : 'Update TVL Cap'}
+                </button>
+              </div>
+              
             </div>
           </div>
 
@@ -355,85 +460,6 @@ export default function AdminPage() {
             )}
           </div>
 
-          {/* Admin Actions */}
-          <div className="card">
-            <h3 className="card-title">Administrative Actions</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-              
-              {/* Emergency Controls */}
-              <div>
-                <h4 style={{ marginBottom: '12px' }}>Emergency Controls</h4>
-                {isPaused ? (
-                  <button 
-                    onClick={unpause} 
-                    className="btn" 
-                    style={{ width: '100%' }}
-                    disabled={actionStates.pause}
-                  >
-                    {actionStates.pause ? 'Resuming...' : 'Resume Vault'}
-                  </button>
-                ) : (
-                  <button 
-                    onClick={emergencyPause} 
-                    className="btn" 
-                    style={{ width: '100%' }}
-                    disabled={actionStates.pause}
-                  >
-                    {actionStates.pause ? 'Pausing...' : 'Emergency Pause'}
-                  </button>
-                )}
-              </div>
-
-              {/* Fee Management */}
-              <div>
-                <h4 style={{ marginBottom: '12px' }}>Fee Management</h4>
-                <button 
-                  onClick={claimFees} 
-                  className="btn" 
-                  style={{ width: '100%' }}
-                  disabled={pendingFees <= 0 || actionStates.fees}
-                >
-                  {actionStates.fees ? 'Claiming...' : `Claim Fees ($${pendingFees.toFixed(6)})`}
-                </button>
-              </div>
-
-              {/* Vault Management */}
-              <div>
-                <h4 style={{ marginBottom: '12px' }}>Vault Management</h4>
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '14px', marginBottom: '4px' }}>New TVL Cap (USD)</label>
-                  <input
-                    type="number"
-                    value={newTvlCap}
-                    onChange={(e) => setNewTvlCap(e.target.value)}
-                    placeholder="e.g., 1000000"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      marginBottom: '8px'
-                    }}
-                  />
-                  <button
-                    onClick={updateTvlCapFunction}
-                    disabled={!newTvlCap || actionStates.tvl}
-                    className="btn"
-                    style={{ width: '100%', marginBottom: '8px' }}
-                  >
-                    {actionStates.tvl ? 'Updating...' : 'Update TVL Cap'}
-                  </button>
-                </div>
-                <button 
-                  onClick={() => window.open(`https://app.superlink.fun/vault/${VAULT_ADDRESS}`, '_blank')} 
-                  className="btn" 
-                  style={{ width: '100%' }}
-                >
-                  View Vault Details
-                </button>
-              </div>
-            </div>
-          </div>
 
           {/* Security Notice */}
           <div style={{ marginTop: '40px', padding: '20px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px' }}>

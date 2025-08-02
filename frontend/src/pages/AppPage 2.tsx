@@ -3,7 +3,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useReadContract } from 'wagmi'
 import { formatUnits } from 'viem'
 import { Link } from 'react-router-dom'
-import { VAULT_ADDRESS, USDC_ADDRESS, USDT_ADDRESS } from '../config/web3'
+import { VAULT_ADDRESS } from '../config/web3'
 import { vaultABI } from '../config/abi'
 
 interface VaultInfo {
@@ -227,12 +227,12 @@ export default function AppPage() {
           }))
         )
         
-        // Strategy: Always use current allocation, fallback to USDC if unknown
-        let targetAsset = currentAllocation as string
+        // Strategy: Try current allocation first, then fallback to vault's base asset (USDC)
+        let targetAsset = currentAllocation
         let fallbackReason = 'using current allocation'
         
         if (!currentAllocation) {
-          targetAsset = USDC_ADDRESS
+          targetAsset = '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9' // USDC address on Etherlink
           fallbackReason = 'vault allocation unknown, using base asset (USDC)'
         }
         
@@ -315,15 +315,12 @@ export default function AppPage() {
     
     console.log('⚠️ All contract calls failed - trying direct USDC fallback...')
     
-    // Final fallback: Get current allocation APY directly via RPC
+    // Final fallback: Get USDC APY directly (vault initializes with USDC)
     try {
-      // Use current allocation if available, otherwise fallback to USDC
-      const targetAsset = currentAllocation || USDC_ADDRESS
+      const usdcAddress = '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9'
       const poolAddress = '0x3bD16D195786fb2F509f2E2D7F69920262EF114D'
       
-      console.log('🔄 RPC fallback - using asset:', targetAsset, targetAsset === USDT_ADDRESS ? '(USDT)' : '(USDC)')
-      
-      // Make direct RPC call for target asset reserve data
+      // Make direct RPC call for USDC reserve data
       const response = await fetch('https://node.mainnet.etherlink.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -332,7 +329,7 @@ export default function AppPage() {
           method: 'eth_call',
           params: [{
             to: poolAddress,
-            data: '0x35ea6a75' + targetAsset.slice(2).padStart(64, '0') // getReserveData(targetAsset)
+            data: '0x35ea6a75' + usdcAddress.slice(2).padStart(64, '0') // getReserveData(USDC)
           }, 'latest'],
           id: 1
         })
@@ -341,7 +338,7 @@ export default function AppPage() {
       const data = await response.json()
       if (data.result && data.result !== '0x') {
         const resultHex = data.result
-        const liquidityRateHex = '0x' + resultHex.slice(130, 194) // liquidityRate at offset 128 (field 2)
+        const liquidityRateHex = '0x' + resultHex.slice(66, 130) // liquidityRate at offset 64
         const liquidityRate = BigInt(liquidityRateHex)
         
         if (liquidityRate > 0) {
@@ -352,13 +349,12 @@ export default function AppPage() {
           const grossAPY = (Math.pow(1 + (aprDecimal / SECONDS_PER_YEAR), SECONDS_PER_YEAR) - 1) * 100
           const netAPY = grossAPY * 0.85 // 15% performance fee
           
-          console.log('📊 Direct RPC APY Calculation:', {
-            asset: targetAsset === USDT_ADDRESS ? 'USDT' : 'USDC',
+          console.log('📊 Direct USDC APY Calculation:', {
             liquidityRateRaw: liquidityRate.toString(),
             aprDecimal: aprDecimal.toFixed(10),
             grossAPY: grossAPY.toFixed(4) + '%',
             netAPY: netAPY.toFixed(4) + '%',
-            note: `Direct RPC fallback for ${targetAsset === USDT_ADDRESS ? 'USDT' : 'USDC'}`
+            note: 'Direct RPC fallback for USDC'
           })
           
           return netAPY
@@ -463,13 +459,7 @@ export default function AppPage() {
                 {/* Vault Stats */}
                 <div className="stats-grid" style={{ margin: '0' }}>
                   <div className="stat-item">
-                    <div 
-                      className="stat-value" 
-                      title={`Exact TVL: $${vault.tvl}`}
-                      style={{ cursor: 'help' }}
-                    >
-                      ${Number(vault.tvl).toLocaleString()}
-                    </div>
+                    <div className="stat-value">${Number(vault.tvl).toLocaleString()}</div>
                     <div className="stat-label">Total Value Locked</div>
                   </div>
                   <div className="stat-item">
@@ -477,16 +467,7 @@ export default function AppPage() {
                     <div className="stat-label">Current APY</div>
                   </div>
                   <div className="stat-item">
-                    <div 
-                      className="stat-value" 
-                      title={`Exact yield: ${Number(vault.totalEarned) < 0 ? '-' : ''}$${Math.abs(Number(vault.totalEarned)).toFixed(6)}`}
-                      style={{ 
-                        cursor: 'help',
-                        color: Number(vault.totalEarned) >= 0 ? '#22c55e' : '#ef4444'
-                      }}
-                    >
-                      {Number(vault.totalEarned) < 0 ? '-' : ''}${Math.abs(Number(vault.totalEarned)).toLocaleString()}
-                    </div>
+                    <div className="stat-value">${Number(vault.totalEarned).toLocaleString()}</div>
                     <div className="stat-label">Total Yield Earned</div>
                   </div>
                 </div>
