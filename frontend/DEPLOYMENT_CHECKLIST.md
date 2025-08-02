@@ -10,7 +10,7 @@
 - [x] **Vault Address**: Updated to `0xe60009Dd8017CC4f300f16655E337B382A7AEAE6`
 - [x] **Admin Address**: Configured for `0x421892ff736134d95d177cd716324df1d240c295`
 - [x] **RPC Endpoints**: Etherlink mainnet endpoints configured
-- [x] **Graph Endpoint**: Latest subgraph endpoint configured
+- [x] **Graph Endpoint**: Latest subgraph endpoint `v2.0.0-new-vault` ✅ **DEPLOYED**
 
 ## Function Names Verified
 - [x] **claimPerformanceFees**: Correct function name in contract ABI

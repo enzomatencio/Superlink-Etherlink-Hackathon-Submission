@@ -1,6 +1,6 @@
 import { GraphQLClient } from 'graphql-request'
 
-const GRAPH_ENDPOINT = import.meta.env.VITE_GRAPH_ENDPOINT || 'https://api.studio.thegraph.com/query/117578/superlink-usd-vault/v1.0.0'
+const GRAPH_ENDPOINT = import.meta.env.VITE_GRAPH_ENDPOINT || 'https://api.studio.thegraph.com/query/117578/superlink-usd-vault/v2.0.0-new-vault'
 
 const graphQLClient = new GraphQLClient(GRAPH_ENDPOINT)
 
