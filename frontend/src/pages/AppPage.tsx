@@ -159,7 +159,7 @@ export default function AppPage() {
   const loadVaultData = useCallback(async () => {
     try {
       // Calculate real APY from underlying lending protocol
-      const currentAPY = calculateRealAPY()
+      const currentAPY = await calculateRealAPY()
       
       // Calculate total yield earned by the vault
       const totalYieldEarned = calculateTotalYieldEarned()
@@ -180,7 +180,7 @@ export default function AppPage() {
     } catch (error) {
       console.error('Error loading vault data:', error)
       // Fallback to basic data with real blockchain values
-      const currentAPY = calculateRealAPY()
+      const currentAPY = await calculateRealAPY()
       const totalYieldEarned = calculateTotalYieldEarned()
       
       setVaults([{
@@ -201,7 +201,7 @@ export default function AppPage() {
     loadVaultData()
   }, [loadVaultData])
 
-  function calculateRealAPY(): number {
+  async function calculateRealAPY(): Promise<number> {
     console.log('🔍 APY Debug Info:', {
       hasReserveData: !!reserveData,
       hasUiPoolData: !!uiPoolData,
@@ -313,7 +313,58 @@ export default function AppPage() {
       }
     }
     
-    console.log('⚠️ All contract calls failed or returned invalid data - returning 0')
+    console.log('⚠️ All contract calls failed - trying direct USDC fallback...')
+    
+    // Final fallback: Get USDC APY directly (vault initializes with USDC)
+    try {
+      const usdcAddress = '0x796Ea11Fa2dD751eD01b53C372fFDB4AAa8f00F9'
+      const poolAddress = '0x3bD16D195786fb2F509f2E2D7F69920262EF114D'
+      
+      // Make direct RPC call for USDC reserve data
+      const response = await fetch('https://node.mainnet.etherlink.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'eth_call',
+          params: [{
+            to: poolAddress,
+            data: '0x35ea6a75' + usdcAddress.slice(2).padStart(64, '0') // getReserveData(USDC)
+          }, 'latest'],
+          id: 1
+        })
+      })
+      
+      const data = await response.json()
+      if (data.result && data.result !== '0x') {
+        const resultHex = data.result
+        const liquidityRateHex = '0x' + resultHex.slice(66, 130) // liquidityRate at offset 64
+        const liquidityRate = BigInt(liquidityRateHex)
+        
+        if (liquidityRate > 0) {
+          const RAY = Number(BigInt(10) ** BigInt(27))
+          const SECONDS_PER_YEAR = 365 * 24 * 60 * 60
+          
+          const aprDecimal = Number(liquidityRate) / RAY
+          const grossAPY = (Math.pow(1 + (aprDecimal / SECONDS_PER_YEAR), SECONDS_PER_YEAR) - 1) * 100
+          const netAPY = grossAPY * 0.85 // 15% performance fee
+          
+          console.log('📊 Direct USDC APY Calculation:', {
+            liquidityRateRaw: liquidityRate.toString(),
+            aprDecimal: aprDecimal.toFixed(10),
+            grossAPY: grossAPY.toFixed(4) + '%',
+            netAPY: netAPY.toFixed(4) + '%',
+            note: 'Direct RPC fallback for USDC'
+          })
+          
+          return netAPY
+        }
+      }
+    } catch (error) {
+      console.error('Direct RPC fallback failed:', error)
+    }
+    
+    console.log('⚠️ All APY calculation methods failed - returning 0')
     return 0
   }
 

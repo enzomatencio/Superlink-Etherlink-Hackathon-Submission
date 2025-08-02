@@ -20,7 +20,7 @@ export default function LandingPage() {
           jsonrpc: '2.0',
           method: 'eth_call',
           params: [{
-            to: '0x3Fca75673860491aCBD2ec27ba0a9B99d2031f7D',
+            to: '0xe60009Dd8017CC4f300f16655E337B382A7AEAE6',
             data: '0x01e1d114' // totalAssets() function selector
           }, 'latest'],
           id: 1
