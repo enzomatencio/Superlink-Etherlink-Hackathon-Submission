@@ -468,7 +468,7 @@ export default function AppPage() {
                       title={`Exact TVL: $${vault.tvl}`}
                       style={{ cursor: 'help' }}
                     >
-                      ${Number(vault.tvl).toLocaleString()}
+                      ${Number(vault.tvl).toFixed(2)}
                     </div>
                     <div className="stat-label">Total Value Locked</div>
                   </div>
@@ -482,10 +482,10 @@ export default function AppPage() {
                       title={`Exact yield: ${Number(vault.totalEarned) < 0 ? '-' : ''}$${Math.abs(Number(vault.totalEarned)).toFixed(6)}`}
                       style={{ 
                         cursor: 'help',
-                        color: Number(vault.totalEarned) >= 0 ? '#22c55e' : '#ef4444'
+                        color: Number(vault.totalEarned) > 0 ? '#22c55e' : (Number(vault.totalEarned) < 0 ? '#ef4444' : 'inherit')
                       }}
                     >
-                      {Number(vault.totalEarned) < 0 ? '-' : ''}${Math.abs(Number(vault.totalEarned)).toLocaleString()}
+                      ${Number(vault.totalEarned) >= 0 ? Math.abs(Number(vault.totalEarned)).toFixed(2) : Number(vault.totalEarned).toFixed(2)}
                     </div>
                     <div className="stat-label">Total Yield Earned</div>
                   </div>

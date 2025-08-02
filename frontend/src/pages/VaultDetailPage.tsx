@@ -730,7 +730,7 @@ export default function VaultDetailPage() {
                 title={`Exact TVL: $${totalAssets ? formatUnits(totalAssets as bigint, 6) : '0.000000'}`}
                 style={{ cursor: 'help' }}
               >
-                {formatUSD(totalAssets ? Number(formatUnits(totalAssets as bigint, 6)) : 0)}
+                ${totalAssets ? Number(formatUnits(totalAssets as bigint, 6)).toFixed(2) : '0.00'}
               </div>
               <div className="stat-label">Total Value Locked</div>
             </div>
@@ -745,13 +745,13 @@ export default function VaultDetailPage() {
             <div className="stat-item">
               <div 
                 className="stat-value" 
-                title={`Exact yield: ${vaultYield < 0 ? '-' : ''}$${Math.abs(vaultYield).toFixed(6)}`}
+                title={`Exact yield: $${vaultYield.toFixed(6)}`}
                 style={{ 
                   cursor: 'help',
-                  color: vaultYield >= 0 ? '#22c55e' : '#ef4444'
+                  color: vaultYield > 0 ? '#22c55e' : (vaultYield < 0 ? '#ef4444' : 'inherit')
                 }}
               >
-                {vaultYield < 0 ? '-' : ''}{formatUSD(Math.abs(vaultYield))}
+                ${vaultYield.toFixed(2)}
               </div>
               <div className="stat-label">Total Yield Earned</div>
             </div>
@@ -769,18 +769,24 @@ export default function VaultDetailPage() {
                 <div className="stat-item">
                   <div 
                     className="stat-value" 
-                    title={`Exact yield: ${userYield < 0 ? '-' : ''}$${Math.abs(userYield).toFixed(6)}`}
+                    title={`Exact yield: $${userYield.toFixed(6)}`}
                     style={{ 
-                      color: userYield >= 0 ? '#22c55e' : '#ef4444',
+                      color: userYield > 0 ? '#22c55e' : (userYield < 0 ? '#ef4444' : 'inherit'),
                       cursor: 'help'
                     }}
                   >
-                    {userYield < 0 ? '-' : ''}{formatUSD(Math.abs(userYield))}
+                    ${userYield.toFixed(2)}
                   </div>
                   <div className="stat-label">Your Yield Earned</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-value">${usdcBalance ? Number(formatUnits(usdcBalance as bigint, 6)).toLocaleString() : '0'}</div>
+                  <div 
+                    className="stat-value" 
+                    title={`Exact balance: ${usdcBalance ? formatUnits(usdcBalance as bigint, 6) : '0.000000'} USDC`}
+                    style={{ cursor: 'help' }}
+                  >
+                    ${usdcBalance ? Number(formatUnits(usdcBalance as bigint, 6)).toFixed(2) : '0.00'}
+                  </div>
                   <div className="stat-label">USDC Balance</div>
                 </div>
                 <div className="stat-item">
@@ -858,7 +864,7 @@ export default function VaultDetailPage() {
                       </button>
                     </div>
                     <div style={{ fontSize: '14px', color: '#666', marginTop: '8px' }}>
-                      Available: {usdcBalance ? Number(formatUnits(usdcBalance as bigint, 6)).toLocaleString() : '0'} USDC
+                      Available: {usdcBalance ? Number(formatUnits(usdcBalance as bigint, 6)).toFixed(2) : '0.00'} USDC
                     </div>
                   </div>
                   <button 

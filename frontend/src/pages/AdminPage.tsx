@@ -324,9 +324,9 @@ export default function AdminPage() {
                     title={`Exact TVL: $${totalAssets ? formatUnits(totalAssets as bigint, 6) : '0.000000'}`}
                     style={{ cursor: 'help' }}
                   >
-                    ${totalAssets ? formatUnits(totalAssets as bigint, 6) : '0.000000'}
+                    ${totalAssets ? Number(formatUnits(totalAssets as bigint, 6)).toFixed(2) : '0.00'}
                   </div>
-                  <div className="stat-label">USD Vault TVL (Full Precision)</div>
+                  <div className="stat-label">USD Vault TVL</div>
                 </div>
                 <div className="stat-item">
                   <div className="stat-value">${tvlCap ? Number(formatUnits(tvlCap as bigint, 6)).toLocaleString() : '0'}</div>
@@ -338,7 +338,7 @@ export default function AdminPage() {
                     title={`Exact pending fees: $${pendingFees.toFixed(8)}`}
                     style={{ cursor: 'help', color: pendingFees > 0 ? '#22c55e' : '#666' }}
                   >
-                    ${pendingFees < 0 ? '-' : ''}${Math.abs(pendingFees).toFixed(8)}
+                    ${pendingFees.toFixed(2)}
                   </div>
                   <div className="stat-label">Pending Fees (15%)</div>
                 </div>
@@ -346,16 +346,15 @@ export default function AdminPage() {
                   <div 
                     className="stat-value"
                     title={`Total yield: ${totalAssets && totalPrincipal ? 
-                      (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6)) < 0 ? '-' : '') +
-                      '$' + Math.abs(Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6))).toFixed(6)
+                      '$' + (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6))).toFixed(6)
                       : '$0.000000'}`}
                     style={{ cursor: 'help', color: totalAssets && totalPrincipal && 
-                      Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6)) >= 0 ? '#22c55e' : '#ef4444' }}
+                      Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6)) > 0 ? '#22c55e' : 
+                      (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6)) < 0 ? '#ef4444' : 'inherit') }}
                   >
                     {totalAssets && totalPrincipal ? 
-                      (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6)) < 0 ? '-' : '') +
-                      '$' + Math.abs(Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6))).toFixed(6)
-                      : '$0.000000'
+                      '$' + (Number(formatUnits(totalAssets as bigint, 6)) - Number(formatUnits(totalPrincipal as bigint, 6))).toFixed(2)
+                      : '$0.00'
                     }
                   </div>
                   <div className="stat-label">Total Yield Earned</div>
