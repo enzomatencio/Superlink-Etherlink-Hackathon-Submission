@@ -305,7 +305,7 @@ export default function AdminPage() {
           </div>
 
           {/* Vault Grid Layout */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '24px', marginBottom: '32px' }}>
             
             {/* Superlink USD Vault Card */}
             <div className="card">
@@ -316,7 +316,8 @@ export default function AdminPage() {
                 </div>
               </div>
               
-              <div className="stats-grid">
+              {/* Vault Stats */}
+              <div className="stats-grid" style={{ marginBottom: '24px' }}>
                 <div className="stat-item">
                   <div 
                     className="stat-value" 
@@ -360,104 +361,105 @@ export default function AdminPage() {
                   <div className="stat-label">Total Yield Earned</div>
                 </div>
               </div>
+              
+              {/* Rebalancing Opportunities */}
+              <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                <h4 style={{ marginBottom: '12px', fontSize: '16px' }}>Rebalancing Opportunities</h4>
+                {canRebalanceData && (canRebalanceData as any)[0] ? (
+                  <div>
+                    <p style={{ color: '#22c55e', marginBottom: '12px', fontSize: '14px' }}>
+                      ✅ Profitable rebalancing available!
+                    </p>
+                    <div style={{ fontSize: '14px', marginBottom: '12px' }}>
+                      <div>Current APY: {canRebalanceData ? (Number((canRebalanceData as any)[3]) / 100).toFixed(4) : '0.0000'}%</div>
+                      <div>Better APY: {canRebalanceData ? (Number((canRebalanceData as any)[4]) / 100).toFixed(4) : '0.0000'}%</div>
+                    </div>
+                    <button 
+                      onClick={rebalanceVault} 
+                      className="btn btn-primary"
+                      style={{ padding: '8px 16px', fontSize: '14px' }}
+                      disabled={actionStates.rebalance}
+                    >
+                      {actionStates.rebalance ? 'Executing...' : 'Execute Rebalance'}
+                    </button>
+                  </div>
+                ) : (
+                  <p style={{ color: '#666', fontSize: '14px', margin: 0 }}>
+                    No profitable rebalancing opportunities at this time
+                  </p>
+                )}
+              </div>
+              
+              {/* Vault Management Actions */}
+              <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '20px' }}>
+                <h4 style={{ marginBottom: '16px', fontSize: '16px' }}>Management Actions</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                  
+                  {/* Fee Management */}
+                  <div>
+                    <button 
+                      onClick={claimFees} 
+                      className="btn" 
+                      style={{ width: '100%' }}
+                      disabled={actionStates.fees}
+                    >
+                      {actionStates.fees ? 'Claiming...' : `Claim Fees`}
+                    </button>
+                  </div>
+                  
+                  {/* Emergency Controls */}
+                  <div>
+                    <button 
+                      onClick={isPaused ? unpause : emergencyPause} 
+                      className={isPaused ? 'btn' : 'btn btn-danger'}
+                      style={{ width: '100%' }}
+                      disabled={actionStates.pause}
+                    >
+                      {actionStates.pause ? (isPaused ? 'Resuming...' : 'Pausing...') : (isPaused ? 'Resume Vault' : 'Emergency Pause')}
+                    </button>
+                  </div>
+                  
+                  {/* TVL Management */}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="number"
+                      value={newTvlCap}
+                      onChange={(e) => setNewTvlCap(e.target.value)}
+                      placeholder="TVL Cap"
+                      style={{ flex: 1, padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                    />
+                    <button 
+                      onClick={updateTvlCapFunction} 
+                      className="btn"
+                      disabled={!newTvlCap || actionStates.tvl}
+                    >
+                      {actionStates.tvl ? '...' : 'Set'}
+                    </button>
+                  </div>
+                  
+                  {/* View Vault */}
+                  <div>
+                    <button 
+                      onClick={() => window.open(`https://app.superlink.fun/vault/${VAULT_ADDRESS}`, '_blank')} 
+                      className="btn" 
+                      style={{ width: '100%' }}
+                    >
+                      View in App →
+                    </button>
+                  </div>
+                  
+                </div>
+              </div>
             </div>
             
             {/* Future Vaults Placeholder */}
             <div className="card" style={{ opacity: 0.6, border: '2px dashed #ccc' }}>
               <h3 className="card-title" style={{ color: '#999' }}>Future Vault Slot</h3>
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#999' }}>
+              <div style={{ textAlign: 'center', padding: '80px 20px', color: '#999' }}>
                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>+</div>
                 <p>Additional vaults will appear here as they are deployed</p>
               </div>
             </div>
-          </div>
-
-          {/* USD Vault Management */}
-          <div className="card" style={{ marginBottom: '32px' }}>
-            <h3 className="card-title">USD Vault Management</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-              
-              {/* Fee Management */}
-              <div>
-                <h4 style={{ marginBottom: '12px' }}>Fee Management</h4>
-                <button 
-                  onClick={claimFees} 
-                  className="btn" 
-                  style={{ width: '100%' }}
-                  disabled={actionStates.fees}
-                >
-                  {actionStates.fees ? 'Claiming...' : `Claim Fees ($${pendingFees.toFixed(6)})`}
-                </button>
-              </div>
-              
-              {/* Emergency Controls */}
-              <div>
-                <h4 style={{ marginBottom: '12px' }}>Emergency Controls</h4>
-                <button 
-                  onClick={isPaused ? unpause : emergencyPause} 
-                  className={isPaused ? 'btn' : 'btn btn-danger'}
-                  style={{ width: '100%' }}
-                  disabled={actionStates.pause}
-                >
-                  {actionStates.pause ? (isPaused ? 'Resuming...' : 'Pausing...') : (isPaused ? 'Resume Vault' : 'Emergency Pause')}
-                </button>
-              </div>
-              
-              {/* TVL Management */}
-              <div>
-                <h4 style={{ marginBottom: '12px' }}>TVL Management</h4>
-                <div style={{ marginBottom: '8px' }}>
-                  <input
-                    type="number"
-                    value={newTvlCap}
-                    onChange={(e) => setNewTvlCap(e.target.value)}
-                    placeholder="New TVL Cap"
-                    style={{ width: '100%', padding: '8px', marginBottom: '8px' }}
-                  />
-                </div>
-                <button 
-                  onClick={updateTvlCapFunction} 
-                  className="btn"
-                  style={{ width: '100%' }}
-                  disabled={!newTvlCap || actionStates.tvl}
-                >
-                  {actionStates.tvl ? 'Updating...' : 'Update TVL Cap'}
-                </button>
-              </div>
-              
-            </div>
-          </div>
-
-          {/* Rebalancing */}
-          <div className="card" style={{ marginBottom: '32px' }}>
-            <h3 className="card-title">Rebalancing</h3>
-            {canRebalanceData && (canRebalanceData as any)[0] ? (
-              <div>
-                <p style={{ color: '#22c55e', marginBottom: '16px' }}>
-                  ✅ Rebalancing is profitable!
-                </p>
-                <p style={{ marginBottom: '16px' }}>
-                  <strong>Contract Rebalance Data:</strong>
-                  <br />
-                  Current APY: {canRebalanceData ? (Number((canRebalanceData as any)[3]) / 100).toFixed(4) : '0.0000'}% 
-                  <br />
-                  Better APY: {canRebalanceData ? (Number((canRebalanceData as any)[4]) / 100).toFixed(4) : '0.0000'}%
-                  <br />
-                  <span style={{ fontSize: '14px', color: '#999' }}>Real-time data from vault contracts</span>
-                </p>
-                <button 
-                  onClick={rebalanceVault} 
-                  className="btn btn-primary"
-                  disabled={actionStates.rebalance}
-                >
-                  {actionStates.rebalance ? 'Executing...' : 'Execute Rebalance'}
-                </button>
-              </div>
-            ) : (
-              <p style={{ color: '#666' }}>
-                No profitable rebalancing opportunities at this time
-              </p>
-            )}
           </div>
 
 
