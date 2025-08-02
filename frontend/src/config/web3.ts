@@ -36,7 +36,7 @@ export const etherlinkMainnet = defineChain({
 
 export const config = getDefaultConfig({
   appName: 'Superlink Vault',
-  projectId: 'superlink-vault-app', // You should get this from WalletConnect Cloud
+  projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'a1b2c3d4e5f6', // Dummy project ID to avoid 403 errors
   chains: [etherlinkMainnet],
   ssr: false,
 });

@@ -6,12 +6,44 @@ import { VAULT_ADDRESS, ADMIN_ADDRESS } from '../config/web3'
 import { vaultABI } from '../config/abi'
 
 export default function AdminPage() {
-  const { address, isConnected } = useAccount()
+  console.log('👑 AdminPage component starting...')
+  
+  // Add error handling for wagmi hooks
+  let address: `0x${string}` | undefined, isConnected: boolean
+  try {
+    const accountResult = useAccount()
+    address = accountResult.address
+    isConnected = accountResult.isConnected
+    console.log('✅ useAccount hook successful', { address, isConnected })
+  } catch (error) {
+    console.error('❌ useAccount hook failed:', error)
+    // Return a fallback UI
+    return (
+      <div style={{ padding: '40px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+        <h1 style={{ color: '#000' }}>Admin Page - Connection Error</h1>
+        <p style={{ color: '#000' }}>Unable to connect to wallet provider. Please refresh the page.</p>
+        <pre style={{ color: '#000', fontSize: '12px' }}>{String(error)}</pre>
+      </div>
+    )
+  }
+  
   const [isAdmin, setIsAdmin] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [newTvlCap, setNewTvlCap] = useState('')
-  const { signMessage } = useSignMessage()
-  const { writeContract } = useWriteContract()
+  
+  // Safely initialize wagmi hooks
+  let signMessage: any, writeContract: any
+  try {
+    const signResult = useSignMessage()
+    const writeResult = useWriteContract()
+    signMessage = signResult.signMessage
+    writeContract = writeResult.writeContract
+    console.log('✅ wagmi hooks initialized successfully')
+  } catch (error) {
+    console.error('❌ wagmi hooks failed:', error)
+    signMessage = () => Promise.reject('Hook not available')
+    writeContract = () => Promise.reject('Hook not available')
+  }
   
   // Separate states for different actions to prevent button conflicts
   const [actionStates, setActionStates] = useState({
