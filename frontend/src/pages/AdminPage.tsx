@@ -29,6 +29,7 @@ export default function AdminPage() {
   
   const [isAdmin, setIsAdmin] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [hasVerifiedSignature, setHasVerifiedSignature] = useState(false)
   const [newTvlCap, setNewTvlCap] = useState('')
   
   // Safely initialize wagmi hooks
@@ -90,12 +91,31 @@ export default function AdminPage() {
   const pendingFees = yieldGenerated > 0 ? yieldGenerated * 0.15 : 0
 
   useEffect(() => {
-    if (isConnected && address && ADMIN_ADDRESS) {
-      setIsAdmin(address.toLowerCase() === ADMIN_ADDRESS?.toLowerCase())
+    console.log('🔍 Admin verification state:', {
+      isConnected,
+      address,
+      ADMIN_ADDRESS,
+      hasVerifiedSignature,
+      addressMatch: address?.toLowerCase() === ADMIN_ADDRESS?.toLowerCase()
+    })
+    
+    // Reset verification if wallet disconnects or address changes
+    if (!isConnected || !address) {
+      setHasVerifiedSignature(false)
+      setIsAdmin(false)
+      return
+    }
+    
+    // Only set isAdmin to true if address matches AND signature has been verified
+    if (isConnected && address && ADMIN_ADDRESS && hasVerifiedSignature) {
+      const addressMatches = address.toLowerCase() === ADMIN_ADDRESS?.toLowerCase()
+      setIsAdmin(addressMatches)
+      console.log('✅ Setting isAdmin to:', addressMatches)
     } else {
       setIsAdmin(false)
+      console.log('❌ Setting isAdmin to false')
     }
-  }, [address, isConnected])
+  }, [address, isConnected, hasVerifiedSignature])
 
   async function verifyAdminSignature() {
     if (!address || !ADMIN_ADDRESS) return
@@ -110,7 +130,7 @@ export default function AdminPage() {
       
       // If signature succeeds and address matches, user is verified admin
       if (address.toLowerCase() === ADMIN_ADDRESS?.toLowerCase()) {
-        setIsAdmin(true)
+        setHasVerifiedSignature(true)
         alert('Admin access verified!')
       } else {
         alert('Address does not match admin address')
