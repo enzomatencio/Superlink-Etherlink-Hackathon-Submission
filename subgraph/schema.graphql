@@ -1,0 +1,226 @@
+type Vault @entity(immutable: false) {
+  id: ID!
+  address: String!
+  name: String!
+  symbol: String!
+  totalAssets: BigInt!
+  totalSupply: BigInt!
+  totalPrincipal: BigInt!
+  currentAllocation: String!
+  paused: Boolean!
+  tvlCap: BigInt!
+  owner: String!
+  
+  # Aggregated stats
+  totalDeposited: BigInt!
+  totalWithdrawn: BigInt!
+  totalFeesClaimed: BigInt!
+  rebalanceCount: Int!
+  userCount: Int!
+  
+  # Relationships
+  deposits: [Deposit!]! @derivedFrom(field: "vault")
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "vault")
+  rebalances: [Rebalance!]! @derivedFrom(field: "vault")
+  feeClaims: [FeeClaim!]! @derivedFrom(field: "vault")
+  users: [User!]! @derivedFrom(field: "vault")
+  
+  # Timestamps
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
+
+type User @entity(immutable: false) {
+  id: ID! # address
+  vault: Vault!
+  address: String!
+  
+  # Current position
+  shareBalance: BigInt!
+  assetBalance: BigInt!
+  principal: BigInt!
+  lastDepositTime: BigInt!
+  
+  # Aggregated stats
+  totalDeposited: BigInt!
+  totalWithdrawn: BigInt!
+  depositCount: Int!
+  withdrawalCount: Int!
+  
+  # Relationships
+  deposits: [Deposit!]! @derivedFrom(field: "user")
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "user")
+  
+  # Timestamps
+  firstDepositAt: BigInt!
+  lastActivityAt: BigInt!
+}
+
+type Deposit @entity(immutable: true) {
+  id: ID! # tx hash + log index
+  vault: Vault!
+  user: User!
+  
+  # Transaction details
+  sender: String!
+  receiver: String!
+  assets: BigInt!
+  shares: BigInt!
+  
+  # Context
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: String!
+  logIndex: BigInt!
+  
+  # Vault state at time of deposit
+  vaultTotalAssets: BigInt!
+  vaultTotalSupply: BigInt!
+  currentAllocation: String!
+}
+
+type Withdrawal @entity(immutable: true) {
+  id: ID! # tx hash + log index
+  vault: Vault!
+  user: User!
+  
+  # Transaction details
+  sender: String!
+  receiver: String!
+  owner: String!
+  assets: BigInt!
+  shares: BigInt!
+  
+  # Context
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: String!
+  logIndex: BigInt!
+  
+  # Vault state at time of withdrawal
+  vaultTotalAssets: BigInt!
+  vaultTotalSupply: BigInt!
+  currentAllocation: String!
+}
+
+type Rebalance @entity(immutable: true) {
+  id: ID! # tx hash + log index
+  vault: Vault!
+  
+  # Rebalance details
+  fromAsset: String!
+  toAsset: String!
+  amount: BigInt!
+  
+  # Context
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: String!
+  logIndex: BigInt!
+  
+  # Vault state
+  vaultTotalAssets: BigInt!
+  newAllocation: String!
+}
+
+type FeeClaim @entity(immutable: true) {
+  id: ID! # tx hash + log index
+  vault: Vault!
+  
+  # Fee details
+  amount: BigInt!
+  claimedBy: String! # admin address
+  
+  # Context
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: String!
+  logIndex: BigInt!
+  
+  # Vault state
+  vaultTotalAssets: BigInt!
+  totalPrincipal: BigInt!
+}
+
+type EmergencyPause @entity(immutable: true) {
+  id: ID! # tx hash + log index
+  vault: Vault!
+  
+  # Context
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: String!
+  logIndex: BigInt!
+  pausedBy: String!
+}
+
+type Unpause @entity(immutable: true) {
+  id: ID! # tx hash + log index
+  vault: Vault!
+  
+  # Context
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: String!
+  logIndex: BigInt!
+  unpausedBy: String!
+}
+
+type TvlCapUpdate @entity(immutable: true) {
+  id: ID! # tx hash + log index
+  vault: Vault!
+  
+  # TVL cap details
+  newCap: BigInt!
+  previousCap: BigInt!
+  updatedBy: String!
+  
+  # Context
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: String!
+  logIndex: BigInt!
+}
+
+type RouteSelection @entity(immutable: true) {
+  id: ID! # tx hash + log index
+  vault: Vault!
+  
+  # Route details
+  router: String!
+  fee: BigInt!
+  amountIn: BigInt!
+  amountOut: BigInt!
+  
+  # Context
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: String!
+  logIndex: BigInt!
+}
+
+# Daily stats for analytics
+type DailyVaultSnapshot @entity(immutable: true) {
+  id: ID! # vault address + day timestamp
+  vault: Vault!
+  day: Int! # timestamp / 86400
+  
+  # Daily metrics
+  totalAssets: BigInt!
+  totalSupply: BigInt!
+  totalPrincipal: BigInt!
+  currentAllocation: String!
+  
+  # Daily activity
+  dailyDeposits: BigInt!
+  dailyWithdrawals: BigInt!
+  dailyDepositCount: Int!
+  dailyWithdrawalCount: Int!
+  dailyActiveUsers: Int!
+  
+  # Performance
+  dailyYield: BigInt! # change in total assets minus net deposits
+  apy: BigInt! # annualized percentage yield
+  
+  timestamp: BigInt!
+}

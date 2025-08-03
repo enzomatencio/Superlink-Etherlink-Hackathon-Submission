@@ -1,0 +1,10 @@
+{
+  "name": "superlink-vault-testing",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Comprehensive testing for Superlink vault",
+  "main": "comprehensive_vault_test.js",
+  "dependencies": {
+    "ethers": "^6.15.0"
+  }
+}

@@ -1,0 +1,45 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: SuperlinkUSDVault
+    network: etherlink-mainnet
+    source:
+      address: "0xe60009Dd8017CC4f300f16655E337B382A7AEAE6"
+      abi: SuperlinkUSDVault
+      startBlock: 22446595
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Deposit
+        - Withdraw
+        - Rebalance
+        - FeeClaim
+        - EmergencyPause
+        - Unpause
+        - TvlCapUpdate
+        - RouteSelection
+      abis:
+        - name: SuperlinkUSDVault
+          file: ./abis/SuperlinkUSDVault.json
+      eventHandlers:
+        - event: Deposit(indexed address,indexed address,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleWithdraw
+        - event: Rebalanced(indexed address,indexed address,uint256)
+          handler: handleRebalanced
+        - event: FeesClaimed(uint256)
+          handler: handleFeesClaimed
+        - event: EmergencyPaused()
+          handler: handleEmergencyPaused
+        - event: Unpaused()
+          handler: handleUnpaused
+        - event: TvlCapUpdated(uint256)
+          handler: handleTvlCapUpdated
+        - event: RouteSelected(indexed address,uint24,uint256,uint256)
+          handler: handleRouteSelected
+      file: ./src/vault.ts
