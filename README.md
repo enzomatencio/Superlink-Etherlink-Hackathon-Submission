@@ -315,7 +315,6 @@ Superlink-Etherlink-Hackathon-Submission/
 │   ├── schema.graphql     # Data schema
 │   ├── src/vault.ts       # Event handlers
 │   └── subgraph.yaml      # Subgraph configuration
-├── CLAUDE.md              # Development documentation
 └── README.md              # This file
 ```
 
